@@ -1,0 +1,8 @@
+# absolute-zero
+
+This repository hosts a conceptual Malbolge program that runs and does nothing — a symbolic homepage, philosophical notes, and structure for future autonomous reasoning agents.
+
+See:
+- /malbolge/nop.mlg: the Malbolge no-op snippet
+- /homepage: symbolic HTML landing page
+- /docs: writing on minimal cognition and silent computation
