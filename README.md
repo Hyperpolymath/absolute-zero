@@ -1,3 +1,3 @@
 Absolute Zero does nothing.
 
-A Malbolge snippet that executes without output
+A Malbolge snippet that executes without output.
