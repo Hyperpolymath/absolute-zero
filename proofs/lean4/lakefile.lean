@@ -2,12 +2,14 @@ import Lake
 open Lake DSL
 
 package cno where
-  -- Add package configuration here
+  version := "0.1.0"
+
+require mathlib from git
+  "https://github.com/leanprover-community/mathlib4.git"
 
 lean_lib CNO where
-  -- Add library configuration here
+  -- Core CNO library
 
 @[default_target]
 lean_exe absolute_zero where
   root := `CNO
-  -- Add more executable configuration here

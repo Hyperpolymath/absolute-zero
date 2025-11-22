@@ -8,18 +8,17 @@
    License: AGPL-3.0 / Palimpsest 0.5
 -/
 
+import Mathlib.Data.Real.Basic
+import Mathlib.Data.Complex.Basic
+
 namespace QuantumCNO
+
+open Real Complex
 
 /-! ## Quantum State Representation -/
 
-/-- Complex number (simplified for now) -/
-structure Complex where
-  re : Float
-  im : Float
-  deriving Repr, BEq
-
-/-- A quantum state is a vector in Hilbert space -/
-def QuantumState : Type := Nat → Complex
+/-- A quantum state is a vector in Hilbert space ℂ^n -/
+def QuantumState : Type := Nat → ℂ
 
 /-! ## Quantum Gates -/
 
@@ -27,7 +26,7 @@ def QuantumState : Type := Nat → Complex
 def QuantumGate : Type := QuantumState → QuantumState
 
 /-- Inner product (simplified) -/
-axiom innerProduct : QuantumState → QuantumState → Complex
+axiom innerProduct : QuantumState → QuantumState → ℂ
 
 /-- A gate is unitary if it preserves inner products -/
 def isUnitary (U : QuantumGate) : Prop :=
@@ -57,7 +56,7 @@ axiom CNOT_gate_unitary : isUnitary CNOT_gate
 
 /-- Two quantum states are equal up to global phase -/
 def quantumStateEq (ψ φ : QuantumState) : Prop :=
-  ∃ θ : Float, ∀ n, ψ n = φ n  -- Simplified (no phase)
+  ∃ θ : ℝ, ∀ n, ψ n = φ n  -- Simplified (no phase)
 
 notation:50 ψ " =q= " φ => quantumStateEq ψ φ
 
@@ -108,10 +107,10 @@ theorem I_gate_is_quantum_cno : isQuantumCNO I_gate := by
 /-! ## Global Phase Gates -/
 
 /-- A gate that only adds global phase -/
-def globalPhaseGate (θ : Float) : QuantumGate :=
+def globalPhaseGate (θ : ℝ) : QuantumGate :=
   fun ψ n => ψ n  -- Simplified
 
-theorem global_phase_is_cno (θ : Float) :
+theorem global_phase_is_cno (θ : ℝ) :
     isQuantumCNO (globalPhaseGate θ) := by
   unfold isQuantumCNO globalPhaseGate
   constructor
@@ -184,7 +183,7 @@ theorem quantum_cno_composition (U V : QuantumGate) :
 /-! ## Quantum Information Theory -/
 
 /-- Von Neumann entropy -/
-axiom vonNeumannEntropy : QuantumState → Float
+axiom vonNeumannEntropy : QuantumState → ℝ
 
 axiom von_neumann_nonneg (ψ : QuantumState) :
   vonNeumannEntropy ψ ≥ 0

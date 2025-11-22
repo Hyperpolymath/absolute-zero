@@ -9,23 +9,28 @@
 -/
 
 import CNO
+import Mathlib.Data.Real.Basic
+import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 namespace StatMech
+
+-- Use ℝ for real numbers
+open Real
 
 /-! ## Physical Constants -/
 
 /-- Boltzmann constant (axiomatized as positive real) -/
-axiom kB : Float
+axiom kB : ℝ
 axiom kB_positive : kB > 0
 
 /-- Temperature in Kelvin -/
-axiom temperature : Float
+axiom temperature : ℝ
 axiom temperature_positive : temperature > 0
 
 /-! ## Probability Distributions -/
 
 /-- Probability distribution over program states -/
-def StateDistribution : Type := CNO.ProgramState → Float
+def StateDistribution : Type := CNO.ProgramState → ℝ
 
 /-- Probabilities are non-negative -/
 axiom prob_nonneg (P : StateDistribution) (s : CNO.ProgramState) :
@@ -43,7 +48,7 @@ def pointDist (s0 : CNO.ProgramState) : StateDistribution :=
 
 /-- Shannon entropy: H(P) = -Σ p(s) log₂ p(s)
     Measured in bits -/
-axiom shannonEntropy : StateDistribution → Float
+axiom shannonEntropy : StateDistribution → ℝ
 
 /-- Shannon entropy is non-negative -/
 axiom shannon_entropy_nonneg (P : StateDistribution) :
@@ -54,14 +59,14 @@ axiom shannon_entropy_point_zero (s : CNO.ProgramState) :
   shannonEntropy (pointDist s) = 0
 
 /-- Change in entropy -/
-def entropyChange (P_initial P_final : StateDistribution) : Float :=
+def entropyChange (P_initial P_final : StateDistribution) : ℝ :=
   shannonEntropy P_final - shannonEntropy P_initial
 
 /-! ## Thermodynamic Entropy -/
 
 /-- Boltzmann entropy: S = kB ln(2) H -/
-def boltzmannEntropy (P : StateDistribution) : Float :=
-  kB * Float.log 2 * shannonEntropy P
+def boltzmannEntropy (P : StateDistribution) : ℝ :=
+  kB * log 2 * shannonEntropy P
 
 /-- Boltzmann entropy is non-negative -/
 theorem boltzmann_entropy_nonneg (P : StateDistribution) :
@@ -72,17 +77,17 @@ theorem boltzmann_entropy_nonneg (P : StateDistribution) :
 /-! ## Landauer's Principle -/
 
 /-- Energy dissipated by a computational process (Joules) -/
-axiom energyDissipatedPhys : StateDistribution → StateDistribution → Float
+axiom energyDissipatedPhys : StateDistribution → StateDistribution → ℝ
 
 /-- Landauer's Principle: Erasing information dissipates energy
     E_dissipated ≥ kT ln(2) × (-ΔS) when ΔS < 0 -/
 axiom landauer_principle (P_initial P_final : StateDistribution) :
   let ΔS := shannonEntropy P_final - shannonEntropy P_initial
   ΔS < 0 →
-  energyDissipatedPhys P_initial P_final ≥ kB * temperature * Float.log 2 * (-ΔS)
+  energyDissipatedPhys P_initial P_final ≥ kB * temperature * log 2 * (-ΔS)
 
 /-- Landauer limit (energy per bit erased) -/
-def landauer_limit : Float := kB * temperature * Float.log 2
+def landauer_limit : ℝ := kB * temperature * log 2
 
 /-! ## CNO Thermodynamics -/
 
