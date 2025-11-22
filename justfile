@@ -348,3 +348,29 @@ help:
     @echo "  just ci              - Run full CI pipeline"
     @echo ""
     @echo "For all commands: just --list"
+
+# ============================================================================
+# Elm GUI Playground
+# ============================================================================
+
+# Build Elm playground
+build-elm:
+    @echo "Building Elm playground..."
+    @if command -v elm >/dev/null 2>&1; then \
+        cd elm && elm make src/Main.elm --output=dist/main.js && echo "✓ Elm compiled"; \
+    else \
+        echo "⚠ elm not found, skipping Elm build"; \
+    fi
+
+# Run Elm playground (opens in browser)
+run-elm: build-elm
+    @echo "Opening Elm playground..."
+    @python3 -m http.server 8000 &
+    @sleep 2
+    @xdg-open http://localhost:8000/elm-playground.html || open http://localhost:8000/elm-playground.html
+
+# Clean Elm artifacts
+clean-elm:
+    @echo "Cleaning Elm artifacts..."
+    rm -rf elm/dist elm/elm-stuff
+
