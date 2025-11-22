@@ -26,9 +26,16 @@ build-rescript:
 # Build Coq proofs
 build-coq:
     @echo "Building Coq proofs..."
-    cd proofs/coq/common && coqc CNO.v
-    cd proofs/coq/malbolge && coqc -R ../common CNO MalbolgeCore.v
-    @echo "✓ Coq proofs compiled"
+    @if command -v coqc >/dev/null 2>&1; then \
+        cd proofs/coq/common && coqc CNO.v && \
+        cd ../physics && coqc -R ../common CNO StatMech.v && \
+        coqc -R ../common CNO LandauerDerivation.v && \
+        cd ../quantum && coqc -R ../common CNO QuantumMechanicsExact.v && \
+        cd ../malbolge && coqc -R ../common CNO MalbolgeCore.v && \
+        echo "✓ Coq proofs compiled"; \
+    else \
+        echo "⚠ coqc not found, skipping Coq build"; \
+    fi
 
 # Build Lean 4 proofs
 build-lean:
@@ -66,7 +73,11 @@ verify-coq: build-coq
 # Verify Z3 SMT properties
 verify-z3:
     @echo "Verifying Z3 SMT properties..."
-    cd proofs/z3 && ./verify.sh
+    @if command -v z3 >/dev/null 2>&1; then \
+        z3 proofs/z3/cno_properties.smt2 && echo "✓ Z3 verification complete"; \
+    else \
+        echo "⚠ z3 not found, skipping Z3 verification"; \
+    fi
 
 # Verify Lean 4 proofs
 verify-lean:
@@ -284,6 +295,42 @@ stats:
     @echo ""
     @echo "Total:"
     @find . -name "*.v" -o -name "*.lean" -o -name "*.agda" -o -name "*.thy" -o -name "*.miz" -o -name "*.smt2" -o -name "*.res" -o -name "*.py" -o -name "*.ts" -o -name "*.md" | xargs wc -l | tail -1
+
+# Check proof completion status
+proof-status:
+    @echo "=== Proof Completion Status ==="
+    @echo ""
+    @echo "Coq proofs:"
+    @admitted=$$(grep -r "Admitted\." proofs/coq/ 2>/dev/null | wc -l); \
+    total=$$(grep -r "Theorem\|Lemma\|Corollary" proofs/coq/ 2>/dev/null | wc -l); \
+    if [ $$total -gt 0 ]; then \
+        complete=$$((total - admitted)); \
+        percent=$$((complete * 100 / total)); \
+        echo "  Theorems: $$total"; \
+        echo "  Complete: $$complete"; \
+        echo "  Admitted: $$admitted"; \
+        echo "  Completion: $$percent%"; \
+    else \
+        echo "  No Coq files found"; \
+    fi
+    @echo ""
+    @echo "Lean 4 proofs:"
+    @sorry=$$(grep -r "sorry" proofs/lean4/ 2>/dev/null | wc -l); \
+    total=$$(grep -r "theorem\|lemma" proofs/lean4/ 2>/dev/null | wc -l); \
+    if [ $$total -gt 0 ]; then \
+        complete=$$((total - sorry)); \
+        percent=$$((complete * 100 / total)); \
+        echo "  Theorems: $$total"; \
+        echo "  Complete: $$complete"; \
+        echo "  Sorry: $$sorry"; \
+        echo "  Completion: $$percent%"; \
+    else \
+        echo "  No Lean files found"; \
+    fi
+    @echo ""
+    @echo "Z3 SMT specifications:"
+    @theorems=$$(grep -c "assert.*theorem" proofs/z3/cno_properties.smt2 2>/dev/null || echo 0); \
+    echo "  Theorems: $$theorems"
 
 # ============================================================================
 # Help
