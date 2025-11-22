@@ -1,0 +1,276 @@
+# Absolute Zero Build Automation
+#
+# Modern build automation using `just` (https://github.com/casey/just)
+# Install: cargo install just
+#
+# Author: Jonathan D. A. Jewell
+# Project: Absolute Zero
+
+# Default recipe (show help)
+default:
+    @just --list
+
+# ============================================================================
+# Build Commands
+# ============================================================================
+
+# Build everything
+build-all: build-rescript build-coq build-typescript
+    @echo "✓ All builds complete"
+
+# Build ReScript interpreters
+build-rescript:
+    @echo "Building ReScript interpreters..."
+    cd interpreters/rescript && npx rescript build
+
+# Build Coq proofs
+build-coq:
+    @echo "Building Coq proofs..."
+    cd proofs/coq/common && coqc CNO.v
+    cd proofs/coq/malbolge && coqc -R ../common CNO MalbolgeCore.v
+    @echo "✓ Coq proofs compiled"
+
+# Build Lean 4 proofs
+build-lean:
+    @echo "Building Lean 4 proofs..."
+    cd proofs/lean4 && lake build
+
+# Build TypeScript
+build-typescript:
+    @echo "Building TypeScript..."
+    npm run build
+    @echo "✓ TypeScript compiled"
+
+# ============================================================================
+# Verification Commands
+# ============================================================================
+
+# Verify all proofs
+verify-all: verify-coq verify-z3 verify-lean
+    @echo "✓ All verifications complete"
+
+# Verify Coq proofs
+verify-coq: build-coq
+    @echo "✓ Coq proofs verified"
+
+# Verify Z3 SMT properties
+verify-z3:
+    @echo "Verifying Z3 SMT properties..."
+    cd proofs/z3 && ./verify.sh
+
+# Verify Lean 4 proofs
+verify-lean:
+    @echo "Verifying Lean 4 proofs..."
+    cd proofs/lean4 && lake build
+
+# Verify Isabelle/HOL proofs
+verify-isabelle:
+    @echo "Verifying Isabelle/HOL proofs..."
+    isabelle build -D proofs/isabelle
+
+# ============================================================================
+# Testing Commands
+# ============================================================================
+
+# Run all tests
+test-all: test-interpreters test-proofs
+    @echo "✓ All tests passed"
+
+# Test interpreters
+test-interpreters:
+    @echo "Testing Brainfuck interpreter..."
+    python3 interpreters/brainfuck/brainfuck.py
+    @echo ""
+    @echo "Testing Whitespace interpreter..."
+    python3 interpreters/whitespace/whitespace.py
+
+# Test proofs
+test-proofs:
+    @echo "Testing proof verification..."
+    just verify-z3
+
+# Run TypeScript tests (when available)
+test-typescript:
+    npm test
+
+# ============================================================================
+# Example Execution
+# ============================================================================
+
+# Run example CNO
+run-example LANG FILE:
+    @echo "Running {{LANG}} example: {{FILE}}"
+    @just run-{{LANG}} {{FILE}}
+
+# Run Brainfuck example
+run-brainfuck FILE:
+    python3 interpreters/brainfuck/brainfuck.py examples/brainfuck/{{FILE}}
+
+# Run Whitespace example
+run-whitespace FILE:
+    python3 interpreters/whitespace/whitespace.py examples/whitespace/{{FILE}}
+
+# Run Malbolge example (ReScript)
+run-malbolge FILE:
+    cd interpreters/rescript && node -e "require('./malbolgeInterpreter.bs.js').execute('$(cat ../../examples/malbolge/{{FILE}})')"
+
+# ============================================================================
+# Documentation
+# ============================================================================
+
+# Generate documentation
+docs:
+    @echo "Generating documentation..."
+    @echo "Theoretical foundations: docs/theory.md"
+    @echo "Examples: docs/examples.md"
+    @echo "Proof guide: docs/proofs-guide.md"
+    @echo "Philosophy: docs/philosophy.md"
+
+# View documentation
+view-docs:
+    @echo "Documentation files:"
+    @ls -lh docs/
+
+# ============================================================================
+# Cleanup
+# ============================================================================
+
+# Clean all build artifacts
+clean: clean-coq clean-lean clean-typescript clean-rescript
+    @echo "✓ All build artifacts cleaned"
+
+# Clean Coq artifacts
+clean-coq:
+    @echo "Cleaning Coq artifacts..."
+    find proofs/coq -name "*.vo" -delete
+    find proofs/coq -name "*.vok" -delete
+    find proofs/coq -name "*.vos" -delete
+    find proofs/coq -name "*.glob" -delete
+    find proofs/coq -name ".*.aux" -delete
+
+# Clean Lean artifacts
+clean-lean:
+    @echo "Cleaning Lean artifacts..."
+    cd proofs/lean4 && lake clean
+
+# Clean TypeScript artifacts
+clean-typescript:
+    @echo "Cleaning TypeScript artifacts..."
+    rm -rf node_modules dist
+
+# Clean ReScript artifacts
+clean-rescript:
+    @echo "Cleaning ReScript artifacts..."
+    cd interpreters/rescript && rm -rf lib
+
+# ============================================================================
+# Development
+# ============================================================================
+
+# Watch TypeScript for changes
+watch:
+    npm run watch
+
+# Format code
+format:
+    @echo "Formatting code..."
+    cd interpreters/rescript && npx rescript format
+
+# Lint code
+lint:
+    @echo "Linting TypeScript..."
+    npm run lint || true
+
+# ============================================================================
+# CI/CD
+# ============================================================================
+
+# Run CI pipeline locally
+ci: build-all test-all verify-all
+    @echo "✓ CI pipeline completed successfully"
+
+# ============================================================================
+# Installation
+# ============================================================================
+
+# Install dependencies
+install: install-npm install-python
+    @echo "✓ Dependencies installed"
+
+# Install npm dependencies
+install-npm:
+    @echo "Installing npm dependencies..."
+    npm install
+
+# Install Python dependencies
+install-python:
+    @echo "Installing Python dependencies..."
+    pip3 install --user pytest hypothesis
+
+# Install proof assistants (Fedora)
+install-provers-fedora:
+    @echo "Installing proof assistants (Fedora)..."
+    sudo dnf install -y coq z3 nodejs opam
+    npm install -g rescript@11.1
+
+# Install proof assistants (Ubuntu)
+install-provers-ubuntu:
+    @echo "Installing proof assistants (Ubuntu)..."
+    sudo apt install -y coq z3 nodejs npm
+    npm install -g rescript@11.1
+
+# ============================================================================
+# Docker
+# ============================================================================
+
+# Build Docker image
+docker-build:
+    @echo "Building Docker image..."
+    docker build -t absolute-zero:latest .
+
+# Run verification in Docker
+docker-verify:
+    @echo "Running verification in Docker..."
+    docker run --rm absolute-zero:latest just verify-all
+
+# ============================================================================
+# Research
+# ============================================================================
+
+# Generate LaTeX paper
+paper:
+    @echo "Generating research paper..."
+    cd papers && pdflatex main.tex
+
+# Count lines of code
+stats:
+    @echo "Project statistics:"
+    @echo ""
+    @echo "Proof code:"
+    @find proofs -name "*.v" -o -name "*.lean" -o -name "*.agda" -o -name "*.thy" -o -name "*.miz" -o -name "*.smt2" | xargs wc -l | tail -1
+    @echo ""
+    @echo "Implementation code:"
+    @find interpreters ts -name "*.res" -o -name "*.py" -o -name "*.ts" | xargs wc -l | tail -1
+    @echo ""
+    @echo "Documentation:"
+    @find docs -name "*.md" | xargs wc -l | tail -1
+    @echo ""
+    @echo "Total:"
+    @find . -name "*.v" -o -name "*.lean" -o -name "*.agda" -o -name "*.thy" -o -name "*.miz" -o -name "*.smt2" -o -name "*.res" -o -name "*.py" -o -name "*.ts" -o -name "*.md" | xargs wc -l | tail -1
+
+# ============================================================================
+# Help
+# ============================================================================
+
+# Show detailed help
+help:
+    @echo "Absolute Zero - Build Automation"
+    @echo ""
+    @echo "Common commands:"
+    @echo "  just build-all       - Build everything"
+    @echo "  just verify-all      - Verify all proofs"
+    @echo "  just test-all        - Run all tests"
+    @echo "  just clean           - Clean build artifacts"
+    @echo "  just ci              - Run full CI pipeline"
+    @echo ""
+    @echo "For all commands: just --list"
