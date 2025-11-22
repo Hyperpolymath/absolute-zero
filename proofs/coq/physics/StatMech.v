@@ -184,6 +184,13 @@ Proof.
   ring.
 Qed.
 
+(** Physical axiom: Reversible processes (ΔS = 0) dissipate no energy *)
+(** This is a consequence of Landauer's Principle and thermodynamic reversibility *)
+Axiom reversible_zero_dissipation :
+  forall P_initial P_final : StateDistribution,
+    shannon_entropy P_initial = shannon_entropy P_final ->
+    energy_dissipated_phys P_initial P_final = 0.
+
 (** Main Theorem: CNOs dissipate zero energy (by Landauer's Principle) *)
 Theorem cno_zero_energy_dissipation :
   forall (p : Program) (P : StateDistribution),
@@ -191,24 +198,9 @@ Theorem cno_zero_energy_dissipation :
     energy_dissipated_phys P (post_execution_dist p P) = 0.
 Proof.
   intros p P H_cno.
-  (* Since ΔS = 0 for CNOs, and physical laws dictate
-     that reversible processes (ΔS = 0) dissipate no energy *)
-  (* This requires additional physical axiom *)
-Admitted.
-
-(** Physical axiom: Reversible processes (ΔS = 0) dissipate no energy *)
-Axiom reversible_zero_dissipation :
-  forall P_initial P_final : StateDistribution,
-    shannon_entropy P_initial = shannon_entropy P_final ->
-    energy_dissipated_phys P_initial P_final = 0.
-
-Theorem cno_zero_energy_dissipation_via_axiom :
-  forall (p : Program) (P : StateDistribution),
-    is_CNO p ->
-    energy_dissipated_phys P (post_execution_dist p P) = 0.
-Proof.
-  intros p P H_cno.
+  (* Apply the axiom that reversible processes (ΔS = 0) dissipate no energy *)
   apply reversible_zero_dissipation.
+  (* CNOs preserve entropy *)
   apply cno_preserves_shannon_entropy.
   assumption.
 Qed.
@@ -295,7 +287,7 @@ Proof.
   intros p s1 s2 H_eval H_cno.
   split; intros H.
   - (* -> direction *)
-    apply cno_zero_energy_dissipation_via_axiom.
+    apply cno_zero_energy_dissipation.
     assumption.
   - (* <- direction *)
     unfold CNO.energy_dissipated.
