@@ -85,22 +85,61 @@ check_tool() {
 }
 
 MISSING_TOOLS=()
+OPTIONAL_TOOLS=()
 
+# Core proof tools (required)
 check_tool coqc || MISSING_TOOLS+=("coq")
 check_tool z3 || MISSING_TOOLS+=("z3")
 check_tool lake || MISSING_TOOLS+=("lean4/lake")
 check_tool just || MISSING_TOOLS+=("just")
-check_tool npm || MISSING_TOOLS+=("npm")
+
+# Modern runtime (required - replaces npm)
+check_tool deno || MISSING_TOOLS+=("deno")
+
+# Configuration language (recommended)
+check_tool nickel || OPTIONAL_TOOLS+=("nickel")
+
+# Echidna testing stack (optional)
+check_tool echidna || OPTIONAL_TOOLS+=("echidna")
+check_tool slither || OPTIONAL_TOOLS+=("slither")
+
+# Alternative SMT solvers (optional)
+check_tool cvc5 || OPTIONAL_TOOLS+=("cvc5")
+check_tool bitwuzla || OPTIONAL_TOOLS+=("bitwuzla")
+
+# Elm for GUI (optional)
+check_tool elm || OPTIONAL_TOOLS+=("elm")
+
+# Deprecated (will be removed)
+if check_tool npm; then
+    echo "⚠ npm found (deprecated - migrate to Deno)"
+fi
 
 echo ""
 
 if [ ${#MISSING_TOOLS[@]} -gt 0 ]; then
-    echo "⚠ Missing tools: ${MISSING_TOOLS[*]}"
+    echo "❌ Missing REQUIRED tools: ${MISSING_TOOLS[*]}"
     echo ""
     echo "Install with:"
-    echo "  Fedora: sudo dnf install coq z3 nodejs npm && cargo install just"
-    echo "  Ubuntu: sudo apt install coq z3 nodejs npm && cargo install just"
+    echo "  Fedora: sudo dnf install coq z3 && cargo install just"
+    echo "  Ubuntu: sudo apt install coq z3 && cargo install just"
+    echo "  Deno: curl -fsSL https://deno.land/install.sh | sh"
     echo "  Lean 4: curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh"
+    echo ""
+fi
+
+if [ ${#OPTIONAL_TOOLS[@]} -gt 0 ]; then
+    echo "ℹ️  Missing OPTIONAL tools: ${OPTIONAL_TOOLS[*]}"
+    echo ""
+    echo "Install with:"
+    echo "  Nickel: cargo install nickel-lang-cli"
+    echo "  Echidna: wget https://github.com/crytic/echidna/releases/latest/download/echidna-*-Linux.tar.gz"
+    echo "  Slither: pip3 install --user slither-analyzer"
+    echo "  CVC5: wget https://github.com/cvc5/cvc5/releases/latest/download/cvc5-Linux"
+    echo "  Bitwuzla: See https://bitwuzla.github.io/"
+    echo "  Elm: npm install -g elm (or use Deno: deno install --allow-all npm:elm)"
+    echo ""
+    echo "See ECHIDNA_INTEGRATION.adoc for detailed setup"
     echo ""
 fi
 
