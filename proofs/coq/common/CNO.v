@@ -480,18 +480,19 @@ Proof.
 Qed.
 
 Theorem cno_equiv_trans :
-  forall p1 p2 p3, cno_equiv p1 p2 -> cno_equiv p2 p3 -> cno_equiv p1 p3.
+  forall p1 p2 p3,
+    (forall s, terminates p2 s) ->  (* Add termination hypothesis *)
+    cno_equiv p1 p2 -> cno_equiv p2 p3 -> cno_equiv p1 p3.
 Proof.
-  unfold cno_equiv.
-  intros p1 p2 p3 H12 H23 s s1 s3 H1 H3.
-  (* We need to find the result of evaluating p2 from s *)
+  unfold cno_equiv, terminates.
+  intros p1 p2 p3 T2 H12 H23 s s1 s3 H1 H3.
+  (* Since p2 terminates from s, get the intermediate state *)
   destruct (T2 s) as [s2 E2].
-  - (* This requires p2 to terminate, which we don't have in scope *)
-    (* For full generality, we'd need to assume termination or *)
-    (* restrict to CNOs where termination is guaranteed *)
-    (* For now, axiomatize the necessary evaluation *)
-    admit.
-Admitted.
+  (* Now we can use H12 and H23 *)
+  assert (Heq12 : s1 =st= s2) by (apply H12 with s; assumption).
+  assert (Heq23 : s2 =st= s3) by (apply H23 with s; assumption).
+  eapply state_eq_trans; eassumption.
+Qed.
 
 (** Better formulation: equivalence for CNOs specifically *)
 Theorem cno_equiv_trans_for_cnos :
