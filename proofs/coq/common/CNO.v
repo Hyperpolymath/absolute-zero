@@ -261,7 +261,9 @@ Proof.
     + (* p1 = [] *)
       simpl in H.
       exists s.
-      split; constructor; assumption.
+      split.
+      * constructor.  (* eval [] s s by eval_empty *)
+      * assumption.   (* H : eval p2 s s' *)
     + (* p1 = i :: p1' *)
       simpl in H.
       inversion H; subst.
