@@ -26,7 +26,7 @@ RUN dnf update -y && \
     make cmake \
     git curl wget \
     # Proof assistants
-    coq z3 \
+    coq z3 agda \
     # Modern compiled languages
     rust cargo \
     golang \
@@ -71,11 +71,32 @@ RUN pip3 install --no-cache-dir \
     mypy black ruff
 
 # ============================================================================
-# Install Lean 4 (optional)
+# Install Lean 4
 # ============================================================================
 
 RUN curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y
 ENV PATH="/root/.elan/bin:${PATH}"
+
+# ============================================================================
+# Install Isabelle/HOL
+# ============================================================================
+
+RUN cd /opt && \
+    wget -q https://isabelle.in.tum.de/website-Isabelle2023/dist/Isabelle2023_linux.tar.gz && \
+    tar -xzf Isabelle2023_linux.tar.gz && \
+    rm Isabelle2023_linux.tar.gz
+ENV PATH="/opt/Isabelle2023/bin:${PATH}"
+
+# ============================================================================
+# Install Mizar (if needed - complex setup, may skip for now)
+# ============================================================================
+
+# Mizar requires special setup - documenting for future implementation
+# RUN mkdir -p /opt/mizar && cd /opt/mizar && \
+#     wget http://mizar.org/system/i386-linux/mizar-8.1.11_5.68.1408-i386-linux.tar && \
+#     tar -xf mizar-8.1.11_5.68.1408-i386-linux.tar
+# ENV MIZFILES="/opt/mizar"
+# ENV PATH="/opt/mizar/bin:${PATH}"
 
 # ============================================================================
 # Set up working directory

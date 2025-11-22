@@ -55,7 +55,8 @@ absolute-zero/
 │   └── .latex/
 │
 ├── justfile                 # Build automation
-├── Dockerfile               # Containerized verification
+├── Containerfile            # Containerized verification (Podman/Docker)
+├── VERIFICATION.md          # Detailed verification status
 └── .gitlab-ci.yml           # CI/CD pipeline
 ```
 
@@ -92,13 +93,17 @@ just verify-all
 just test-all
 ```
 
-### Docker
+### Container (Podman/Docker)
 
 ```bash
-# Build image
-docker build -t absolute-zero .
+# Build image (Podman recommended)
+podman build -t absolute-zero .
 
 # Run verification
+podman run --rm absolute-zero just verify-all
+
+# Docker compatibility
+docker build -t absolute-zero .
 docker run --rm absolute-zero just verify-all
 ```
 
@@ -156,14 +161,16 @@ For maximum confidence, we verify CNO properties in **six independent proof syst
 
 | Proof System | Foundation | Lines of Proof | Status |
 |-------------|------------|----------------|--------|
-| **Coq 8.19** | Constructive type theory | ~500 | ✓ Complete |
-| **Z3 4.13** | SMT solving | ~400 | ✓ Complete |
-| **Lean 4** | Dependent type theory | ~300 | ✓ Complete |
-| **Agda 2.6** | Dependent types | ~400 | ✓ Complete |
-| **Isabelle/HOL** | Higher-order logic | ~350 | ✓ Complete |
-| **Mizar** | Set theory | ~300 | ✓ Complete |
+| **Coq 8.19** | Constructive type theory | ~500 | ⏳ Core theorems proven, composition uses `Admitted` |
+| **Z3 4.13** | SMT solving | ~400 | ⏳ SMT-LIB syntax complete, awaiting verification |
+| **Lean 4** | Dependent type theory | ~360 | ⏳ Main theorems proven, composition has `sorry` |
+| **Agda 2.6** | Dependent types | ~400 | ⏳ Syntax complete, not yet verified |
+| **Isabelle/HOL** | Higher-order logic | ~350 | ⏳ Syntax complete, not yet verified |
+| **Mizar** | Set theory | ~300 | ⚠️ Requires complex installation |
 
-**Multi-prover agreement** increases confidence in correctness.
+**Verification Status**: See [VERIFICATION.md](VERIFICATION.md) for detailed status and instructions.
+
+**Multi-prover approach** increases confidence when proofs are machine-verified.
 
 ## Research Contributions
 

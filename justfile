@@ -15,7 +15,7 @@ default:
 # ============================================================================
 
 # Build everything
-build-all: build-rescript build-coq build-typescript
+build-all: build-rescript build-coq build-lean build-agda build-isabelle build-typescript
     @echo "✓ All builds complete"
 
 # Build ReScript interpreters
@@ -35,6 +35,16 @@ build-lean:
     @echo "Building Lean 4 proofs..."
     cd proofs/lean4 && lake build
 
+# Build Agda proofs
+build-agda:
+    @echo "Building Agda proofs..."
+    cd proofs/agda && agda CNO.agda
+
+# Build Isabelle/HOL proofs
+build-isabelle:
+    @echo "Building Isabelle/HOL proofs..."
+    isabelle build -D proofs/isabelle
+
 # Build TypeScript
 build-typescript:
     @echo "Building TypeScript..."
@@ -46,7 +56,7 @@ build-typescript:
 # ============================================================================
 
 # Verify all proofs
-verify-all: verify-coq verify-z3 verify-lean
+verify-all: verify-coq verify-z3 verify-lean verify-agda verify-isabelle
     @echo "✓ All verifications complete"
 
 # Verify Coq proofs
@@ -63,10 +73,13 @@ verify-lean:
     @echo "Verifying Lean 4 proofs..."
     cd proofs/lean4 && lake build
 
+# Verify Agda proofs
+verify-agda: build-agda
+    @echo "✓ Agda proofs verified"
+
 # Verify Isabelle/HOL proofs
-verify-isabelle:
-    @echo "Verifying Isabelle/HOL proofs..."
-    isabelle build -D proofs/isabelle
+verify-isabelle: build-isabelle
+    @echo "✓ Isabelle/HOL proofs verified"
 
 # ============================================================================
 # Testing Commands
