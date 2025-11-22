@@ -266,6 +266,34 @@ theorem eval_seqComp (p1 p2 : Program) (s : ProgramState) :
       unfold eval
       exact ih (step s i)
 
+/-- State equality is transitive -/
+theorem state_eq_trans (s1 s2 s3 : ProgramState) :
+    ProgramState.eq s1 s2 → ProgramState.eq s2 s3 → ProgramState.eq s1 s3 := by
+  intro h12 h23
+  unfold ProgramState.eq at *
+  obtain ⟨mem12, reg12, io12, pc12⟩ := h12
+  obtain ⟨mem23, reg23, io23, pc23⟩ := h23
+  constructor
+  · unfold Memory.eq at *
+    intro addr
+    rw [mem12, mem23]
+  constructor
+  · rw [reg12, reg23]
+  constructor
+  · rw [io12, io23]
+  · rw [pc12, pc23]
+
+/-- Purity is transitive -/
+theorem pure_trans (s1 s2 s3 : ProgramState) :
+    pure s1 s2 → pure s2 s3 → pure s1 s3 := by
+  intro ⟨io12, mem12⟩ ⟨io23, mem23⟩
+  constructor
+  · unfold noIO at *
+    rw [io12, io23]
+  · unfold noMemoryAlloc Memory.eq at *
+    intro addr
+    rw [mem12, mem23]
+
 /-- Composition of CNOs is a CNO -/
 theorem cno_composition (p1 p2 : Program) (h1 : isCNO p1) (h2 : isCNO p2) :
     isCNO (seqComp p1 p2) := by
@@ -277,14 +305,21 @@ theorem cno_composition (p1 p2 : Program) (h1 : isCNO p1) (h2 : isCNO p2) :
   constructor
   · intro s
     rw [eval_seqComp]
-    have := i1 s
-    have := i2 (eval p1 s)
-    sorry  -- Requires transitive reasoning on state equality
+    -- p1 maps s to itself, so eval p1 s = s (by i1)
+    -- p2 maps (eval p1 s) to itself, so eval p2 (eval p1 s) = eval p1 s (by i2)
+    -- Therefore eval p2 (eval p1 s) = s by transitivity
+    have h1_eq := i1 s
+    have h2_eq := i2 (eval p1 s)
+    exact state_eq_trans s (eval p1 s) (eval p2 (eval p1 s)) h1_eq h2_eq
   constructor
   · intro s
     rw [eval_seqComp]
-    unfold pure at *
-    sorry  -- Requires composition of purity
+    -- Purity of p1: pure s (eval p1 s)
+    -- Purity of p2: pure (eval p1 s) (eval p2 (eval p1 s))
+    -- By transitivity: pure s (eval p2 (eval p1 s))
+    have pu1_s := pu1 s
+    have pu2_s := pu2 (eval p1 s)
+    exact pure_trans s (eval p1 s) (eval p2 (eval p1 s)) pu1_s pu2_s
   · unfold thermodynamicallyReversible energyDissipated
     intro s; rfl
 
