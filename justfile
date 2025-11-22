@@ -220,18 +220,32 @@ install-provers-ubuntu:
     npm install -g rescript@11.1
 
 # ============================================================================
-# Docker
+# Container (Podman/Docker)
 # ============================================================================
 
-# Build Docker image
-docker-build:
-    @echo "Building Docker image..."
-    docker build -t absolute-zero:latest .
+# Build container image (Podman preferred)
+container-build:
+    @echo "Building container image..."
+    podman build -t absolute-zero:latest .
 
-# Run verification in Docker
-docker-verify:
-    @echo "Running verification in Docker..."
-    docker run --rm absolute-zero:latest just verify-all
+# Run verification in container
+container-verify:
+    @echo "Running verification in container..."
+    podman run --rm absolute-zero:latest just verify-all
+
+# Run container interactively
+container-shell:
+    @echo "Starting interactive shell..."
+    podman run --rm -it absolute-zero:latest /bin/bash
+
+# Run all language examples in container
+container-test-all:
+    @echo "Testing all languages in container..."
+    podman run --rm absolute-zero:latest just test-all
+
+# Docker compatibility aliases
+docker-build: container-build
+docker-verify: container-verify
 
 # ============================================================================
 # Research
